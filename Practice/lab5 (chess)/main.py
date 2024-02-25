@@ -48,14 +48,23 @@ class Figure:
                 field['E']['1'] = ' '
                 moves.append('0-0')
         else:
-            if field[move[0]][move[1]] == ' ':
-                moves.append(self.pos+'-'+move)
+            if not isinstance(field[move[0]][move[1]], Pawn):
+                eaten_temp = field[move[0]][move[1]].__str__()
             else:
-                moves.append(self.pos + ':' + move)
+                eaten_temp = ''
+            if not isinstance(self, Pawn):
+                temp = self.__str__()
+            else:
+                temp = ''
+            if field[move[0]][move[1]] == ' ':
+                moves.append((temp+self.pos+'-'+eaten_temp+move).replace(' ',''))
+            else:
+                moves.append((temp+self.pos + ':' + eaten_temp+move).replace(' ', ''))
             field[self.pos[0]][self.pos[1]] = ' '
             field[move[0]][move[1]] = ' '
-            field[move[0]][move[1]] = self
             self.pos = move
+            field[move[0]][move[1]] = self
+
         return field, 'White' if self.color == 'Black' else 'Black'
 
 
@@ -418,8 +427,8 @@ class ChessGame(Game):
     figures = {
         1: 'RNBQKPI',
         -1: 'rnbqkpi',
-        'White': 'RNBQKPI',
-        'Black': 'rnbqkpi',
+        'White': 'RNBQKPIES',
+        'Black': 'rnbqkpies',
         'All': 'RNBQKPIrnbqkpi',
     }
 
@@ -510,7 +519,7 @@ class ChessGame(Game):
 
     def check_mate(self, color: str) -> bool:
         """
-        Метод  проверяет стоит ли мат игроку, переданного цвета
+        Метод проверяет стоит ли мат игроку, переданного цвета
         :param color: цвет игрока
         :return: True - мат, False - нет мата
         """
@@ -518,9 +527,9 @@ class ChessGame(Game):
         for key in self.field.keys():
             for number in self.field[key].keys():
                 if self.field[key][number].__str__() in self.figures[color]:
-                    temp = self.field[key][number].calculate_possible_moves(self.field)
-                    for possible_move in temp:
-                        self.field, flag = self.field[key][number].step(self.field, possible_move)
+                    tmp = self.field[key][number].calculate_possible_moves(self.field)
+                    for possible_move in tmp:
+                        self.field = self.field[key][number].step(self.field, possible_move)[0]
                         if not self.check_check(color):
                             temp = False
                             self.return_steps(1, color)
@@ -531,14 +540,7 @@ class ChessGame(Game):
                     break
             if not temp:
                 break
-        for possible_move_king in self.field[self.find_king(color)[0]][self.find_king(color)[1]].calculate_possible_moves(self.field):
-            self.field[self.find_king(color)[0]][self.find_king(color)[1]].step(self.field, possible_move_king)
-            if not self.check_check(color):
-                temp = False
-                self.return_steps(1, color)
-                break
-            else:
-                self.return_steps(1, color)
+
         return temp
 
     def tips(self, possible_moves: list, color: str) -> None:
@@ -564,9 +566,7 @@ class ChessGame(Game):
                 if self.field[step[0]][step[-1]] == ' ':
                     self.field[step[0]][step[-1]] = '*'
                 else:
-                    print(self.field[step[0]][step[-1]])
                     green.append(step)
-        print(green)
         self.print_field(green, None)
         self.clear_tips()
 
@@ -579,6 +579,26 @@ class ChessGame(Game):
             for number in self.field[key].keys():
                 if self.field[key][number] == '*':
                     self.field[key][number] = ' '
+
+    @staticmethod
+    def get_figure_by_str(name):
+        name = name.upper()
+        if name == 'Q':
+            return Queen
+        elif name == 'B':
+            return Bishop
+        elif name =='I':
+            return Infantry
+        elif name == 'R':
+            return Rook
+        elif name == 'N':
+            return Knight
+        elif name == 'S':
+            return Archbishop
+        elif name == 'E':
+            return Chancellor
+        elif name == 'K':
+            return King
 
     def return_steps(self, count, color):
         steps = moves[::-1]
@@ -611,19 +631,19 @@ class ChessGame(Game):
             else:
                 if '-' in steps[step]:
                     current, expected = steps[step].split('-')
-                    self.field[expected[0]][expected[1]].pos = current
+                    self.field[expected[-2]][expected[-1]].pos = current if len(current) == 2 else current[1:]
                     self.field[current[-2]][current[-1]], self.field[expected[-2]][expected[-1]] = self.field[expected[-2]][expected[-1]], self.field[current[-2]][current[-1]]
                 elif ':' in steps[step]:
                     current, expected = steps[step].split(':')
-                    self.field[expected[0]][expected[1]].pos = current
+                    self.field[expected[-2]][expected[-1]].pos = current if len(current) == 2 else current[1:]
                     if len(expected) == 2:
-                        self.field[expected[0]][expected[-1]] = 'p' if color == 'Black' else 'P'
+                        self.field[expected[0]][expected[-1]] = Pawn(expected, 'Black' if color == 'White' else 'White')
                     else:
-                        self.field[expected[1]][expected[-1]] = expected[0]
+                        self.field[expected[1]][expected[-1]] = ChessGame.get_figure_by_str(expected[0])(expected if len(expected) == 2 else expected[1:], 'Black' if color == 'White' else 'White')
                     if len(current) == 2:
-                        self.field[current[0]][current[-1]] = 'p' if color == 'White' else 'P'
+                        self.field[current[0]][current[-1]] = Pawn(current, 'White' if color == 'White' else 'Black')
                     else:
-                        self.field[current[1]][current[-1]] = current[0]
+                        self.field[current[1]][current[-1]] = ChessGame.get_figure_by_str(current[0])(current if len(current) == 2 else current[1:], 'White' if color == 'White' else 'Black')
             color = 'Black' if color == 'White' else 'White'
             moves.pop(-1)
         return color
