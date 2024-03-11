@@ -22,7 +22,7 @@ class Figure:
         :param move: на какую клетку сходить
         :return: (поле после хода, цвет следующего игрока)
         """
-        if field[self.pos[0]][self.pos[-1]].__str__() in 'Kk' and move in ['C8', 'C1', 'G8', 'G1'] and ('0-0' in self.calculate_possible_moves(field) or '0-0-0' in self.calculate_possible_moves(field)):
+        if field[self.pos[0]][''.join([i for i in self.pos if i.isdigit()])].__str__() in 'Kk' and move in ['C8', 'C1', 'G8', 'G1'] and ('0-0' in self.calculate_possible_moves(field) or '0-0-0' in self.calculate_possible_moves(field)):
             if move == 'C8':
                 field['C']['8'] = 'k'
                 field['D']['8'] = 'r'
@@ -48,22 +48,22 @@ class Figure:
                 field['E']['1'] = ' '
                 moves.append('0-0')
         else:
-            if not isinstance(field[move[0]][move[1]], Pawn):
-                eaten_temp = field[move[0]][move[1]].__str__()
+            if not isinstance(field[move[0]][''.join([i for i in move if i.isdigit()])], Pawn):
+                eaten_temp = field[move[0]][''.join([i for i in move if i.isdigit()])].__str__()
             else:
                 eaten_temp = ''
             if not isinstance(self, Pawn):
                 temp = self.__str__()
             else:
                 temp = ''
-            if field[move[0]][move[1]] == ' ':
+            if field[move[0]][''.join([i for i in move if i.isdigit()])] == ' ':
                 moves.append((temp+self.pos+'-'+eaten_temp+move).replace(' ',''))
             else:
                 moves.append((temp+self.pos + ':' + eaten_temp+move).replace(' ', ''))
-            field[self.pos[0]][self.pos[1]] = ' '
-            field[move[0]][move[1]] = ' '
+            field[self.pos[0]][''.join([i for i in self.pos if i.isdigit()])] = ' '
+            field[move[0]][''.join([i for i in move if i.isdigit()])] = ' '
             self.pos = move
-            field[move[0]][move[1]] = self
+            field[move[0]][''.join([i for i in move if i.isdigit()])] = self
 
         return field, 'White' if self.color == 'Black' else 'Black'
 
@@ -76,27 +76,27 @@ class Pawn(Figure):
     def calculate_possible_moves(self, field):
         possible_moves = []
         if self.color == 'White':
-            temp = 1
+            temp = 1 if len(field['A']) == 8 else 2
         else:
-            temp = -1
+            temp = -1 if len(field['A']) == 8 else -2
         try:
-            if field[self.pos[0]][str(int(self.pos[-1]) + temp)] == ' ':
-                possible_moves.append(self.pos[0] + str(int(self.pos[-1]) + temp))
+            if field[self.pos[0]][str(int(''.join([i for i in self.pos if i.isdigit()])) + temp)] == ' ':
+                possible_moves.append(self.pos[0] + str(int(''.join([i for i in self.pos if i.isdigit()])) + temp))
         except (KeyError, IndexError):
             pass
         try:
-            if field[ChessGame.alphabet[ChessGame.alphabet.index(self.pos[0]) - 1]][str(int(self.pos[-1]) + temp)].__str__() in ChessGame.figures[temp * (-1)] and ChessGame.alphabet.index(self.pos[0]) - 1 >= 0:
-                possible_moves.append(ChessGame.alphabet[ChessGame.alphabet.index(self.pos[0]) - 1] + str(int(self.pos[-1]) + temp))
+            if field[ChessGame.alphabet[ChessGame.alphabet.index(self.pos[0]) - 1]][str(int(''.join([i for i in self.pos if i.isdigit()])) + (1 if self.color =='White' else -1))].__str__() in ChessGame.figures[(1 if self.color =='White' else -1) * (-1)] and ChessGame.alphabet.index(self.pos[0]) - 1 >= 0:
+                possible_moves.append(ChessGame.alphabet[ChessGame.alphabet.index(self.pos[0]) - 1] + str(int(''.join([i for i in self.pos if i.isdigit()])) + (1 if self.color =='White' else -1)))
         except (KeyError, IndexError):
             pass
         try:
-            if field[ChessGame.alphabet[ChessGame.alphabet.index(self.pos[0]) + 1]][str(int(self.pos[-1]) + temp)].__str__() in ChessGame.figures[temp * (-1)] and ChessGame.alphabet.index(self.pos[0]) + 1 <= 8:
-                possible_moves.append(ChessGame.alphabet[ChessGame.alphabet.index(self.pos[0]) + 1] + str(int(self.pos[-1]) + temp))
+            if field[ChessGame.alphabet[ChessGame.alphabet.index(self.pos[0]) + 1]][str(int(''.join([i for i in self.pos if i.isdigit()])) + (1 if self.color =='White' else -1))].__str__() in ChessGame.figures[(1 if self.color =='White' else -1) * (-1)] and ChessGame.alphabet.index(self.pos[0]) + 1 <= 8:
+                possible_moves.append(ChessGame.alphabet[ChessGame.alphabet.index(self.pos[0]) + 1] + str(int(''.join([i for i in self.pos if i.isdigit()]))  + (1 if self.color =='White' else -1)))
         except (KeyError, IndexError):
             pass
         try:
-            if self.pos[-1] in '72' and field[self.pos[0]][str(int(self.pos[-1]) + (2*temp))] == ' ' and field[self.pos[0]][str(int(self.pos[-1]) + temp)] == ' ':
-                possible_moves.append(self.pos[0] + str(int(self.pos[-1]) + (2*temp)))
+            if not (any([self.pos in move for move in moves])) and field[self.pos[0]][str(int(''.join([i for i in self.pos if i.isdigit()])) + (2*temp))] == ' ' and field[self.pos[0]][str(int(''.join([i for i in self.pos if i.isdigit()])) + temp)] == ' ':
+                possible_moves.append(self.pos[0] + str(int(''.join([i for i in self.pos if i.isdigit()])) + (2*temp)))
         except (KeyError, IndexError):
             pass
         return possible_moves
@@ -111,8 +111,9 @@ class Rook(Figure):
         super().__init__(pos, color)
 
     def calculate_possible_moves(self, field):
+        temp = 1 if len(field['A'].keys()) == 8 else 2
         possible_moves = []
-        for index in range(int(self.pos[-1]) + 1, 9):
+        for index in range(int(''.join([i for i in self.pos if i.isdigit()])) + temp, len(field['A'].keys())+1, temp):
             if field[self.pos[0]][str(index)] == ' ':
                 possible_moves.append(self.pos[0] + str(index))
             elif field[self.pos[0]][str(index)].__str__() in ChessGame.figures['All'] and field[self.pos[0]][str(index)].__str__() not in ChessGame.figures[self.color]:
@@ -120,7 +121,7 @@ class Rook(Figure):
                 break
             else:
                 break
-        for index in range(int(self.pos[-1]) - 1, 0, -1):
+        for index in range(int(''.join([i for i in self.pos if i.isdigit()])) - temp, 0, temp*(-1)):
             if field[self.pos[0]][str(index)] == ' ':
                 possible_moves.append(self.pos[0] + str(index))
             elif field[self.pos[0]][str(index)].__str__() in ChessGame.figures['All'] and field[self.pos[0]][str(index)].__str__() not in ChessGame.figures[self.color]:
@@ -128,19 +129,19 @@ class Rook(Figure):
                 break
             else:
                 break
-        for index in range(ChessGame.alphabet.index(self.pos[0]) + 1, 8):
-            if field[ChessGame.alphabet[index]][self.pos[-1]].__str__() == ' ':
-                possible_moves.append(ChessGame.alphabet[index] + self.pos[-1])
-            elif field[ChessGame.alphabet[index]][self.pos[-1]].__str__() in ChessGame.figures['All'] and field[ChessGame.alphabet[index]][self.pos[-1]].__str__() not in ChessGame.figures[self.color]:
-                possible_moves.append(ChessGame.alphabet[index] + self.pos[-1])
+        for index in range(ChessGame.alphabet.index(self.pos[0])+temp, 8, temp):
+            if field[ChessGame.alphabet[index]][''.join([i for i in self.pos if i.isdigit()])].__str__() == ' ':
+                possible_moves.append(ChessGame.alphabet[index] + ''.join([i for i in self.pos if i.isdigit()]))
+            elif field[ChessGame.alphabet[index]][''.join([i for i in self.pos if i.isdigit()])].__str__() in ChessGame.figures['All'] and field[ChessGame.alphabet[index]][''.join([i for i in self.pos if i.isdigit()])].__str__() not in ChessGame.figures[self.color]:
+                possible_moves.append(ChessGame.alphabet[index] + ''.join([i for i in self.pos if i.isdigit()]))
                 break
             else:
                 break
-        for index in range(ChessGame.alphabet.index(self.pos[0]) - 1, -1, -1):
-            if field[ChessGame.alphabet[index]][self.pos[-1]].__str__() == ' ':
-                possible_moves.append(ChessGame.alphabet[index] + self.pos[-1])
-            elif field[ChessGame.alphabet[index]][self.pos[-1]].__str__() in ChessGame.figures['All'] and field[ChessGame.alphabet[index]][self.pos[-1]].__str__() not in ChessGame.figures[self.color]:
-                possible_moves.append(ChessGame.alphabet[index] + self.pos[-1])
+        for index in range(ChessGame.alphabet.index(self.pos[0]) - temp, -1, -1*temp):
+            if field[ChessGame.alphabet[index]][''.join([i for i in self.pos if i.isdigit()])].__str__() == ' ':
+                possible_moves.append(ChessGame.alphabet[index] +''.join([i for i in self.pos if i.isdigit()]))
+            elif field[ChessGame.alphabet[index]][''.join([i for i in self.pos if i.isdigit()])].__str__() in ChessGame.figures['All'] and field[ChessGame.alphabet[index]][''.join([i for i in self.pos if i.isdigit()])].__str__() not in ChessGame.figures[self.color]:
+                possible_moves.append(ChessGame.alphabet[index] + ''.join([i for i in self.pos if i.isdigit()]))
                 break
             else:
                 break
@@ -157,14 +158,16 @@ class Knight(Figure):
 
     def calculate_possible_moves(self, field):
         vectors = [(1, 2), (-1, 2), (1, -2), (-1, -2), (2, 1), (2, -1), (-2, 1), (-2, -1)]
+        if len(field['A'].keys()) != 8:
+            vectors = [(i[0],i[1]*2+(1 if i[1]> 0 else -1)) for i in vectors if abs(i[0]) == 1] + [(i[0]*2+(1 if i[0]> 0 else -1),i[1]) for i in vectors if abs(i[0]) == 2]
         possible_moves = []
         for vector in vectors:
             try:
-                if field[ChessGame.alphabet[ChessGame.alphabet.index(self.pos[0]) + vector[0]]][str(int(self.pos[-1]) + vector[1])] == ' ':
-                    possible_moves.append(ChessGame.alphabet[ChessGame.alphabet.index(self.pos[0]) + vector[0]] + str(int(self.pos[-1]) + vector[1]))
-                elif field[ChessGame.alphabet[ChessGame.alphabet.index(self.pos[0]) + vector[0]]][str(int(self.pos[-1]) + vector[1])].__str__() in ChessGame.figures['All'] and \
-                        field[ChessGame.alphabet[ChessGame.alphabet.index(self.pos[0]) + vector[0]]][str(int(self.pos[-1]) + vector[1])].__str__() not in ChessGame.figures[self.color]:
-                    possible_moves.append(ChessGame.alphabet[ChessGame.alphabet.index(self.pos[0]) + vector[0]] + str(int(self.pos[-1]) + vector[1]))
+                if field[ChessGame.alphabet[ChessGame.alphabet.index(self.pos[0]) + vector[0]]][str(int(''.join([i for i in self.pos if i.isdigit()])) + vector[1])] == ' ':
+                    possible_moves.append(ChessGame.alphabet[ChessGame.alphabet.index(self.pos[0]) + vector[0]] + str(int(''.join([i for i in self.pos if i.isdigit()])) + vector[1]))
+                elif field[ChessGame.alphabet[ChessGame.alphabet.index(self.pos[0]) + vector[0]]][str(int(''.join([i for i in self.pos if i.isdigit()])) + vector[1])].__str__() in ChessGame.figures['All'] and \
+                        field[ChessGame.alphabet[ChessGame.alphabet.index(self.pos[0]) + vector[0]]][str(int(''.join([i for i in self.pos if i.isdigit()])) + vector[1])].__str__() not in ChessGame.figures[self.color]:
+                    possible_moves.append(ChessGame.alphabet[ChessGame.alphabet.index(self.pos[0]) + vector[0]] + str(int(''.join([i for i in self.pos if i.isdigit()])) + vector[1]))
             except (KeyError, IndexError):
                 pass
         return possible_moves
@@ -180,8 +183,9 @@ class Bishop(Figure):
 
     def calculate_possible_moves(self, field):
         possible_moves = []
+        temp = 1 if len(field['A'].keys()) == 8 else 2
         try:
-            for pos in enumerate(ChessGame.alphabet[ChessGame.alphabet.index(self.pos[0]) + 1:], int(self.pos[-1]) + 1):
+            for pos in enumerate(ChessGame.alphabet[ChessGame.alphabet.index(self.pos[0]) + 1:], int(''.join([i for i in self.pos if i.isdigit()])) + 1):
                 if field[pos[-1]][str(pos[0])] == ' ':
                     possible_moves.append(pos[-1] + str(pos[0]))
                 elif field[pos[-1]][str(pos[0])].__str__() in ChessGame.figures['All'] and field[pos[-1]][str(pos[0])].__str__() not in ChessGame.figures[self.color]:
@@ -192,7 +196,7 @@ class Bishop(Figure):
         except (KeyError, IndexError):
             pass
         try:
-            for pos in enumerate(ChessGame.alphabet[:ChessGame.alphabet.index(self.pos[0])][::-1], int(self.pos[-1]) + 1):
+            for pos in enumerate(ChessGame.alphabet[:ChessGame.alphabet.index(self.pos[0])][::-1], int(''.join([i for i in self.pos if i.isdigit()])) + 1):
                 if field[pos[-1]][str(pos[0])] == ' ':
                     possible_moves.append(pos[-1] + str(pos[0]))
                 elif field[pos[-1]][str(pos[0])].__str__() in ChessGame.figures['All'] and field[pos[-1]][str(pos[0])].__str__() not in ChessGame.figures[self.color]:
@@ -203,10 +207,10 @@ class Bishop(Figure):
         except (KeyError, IndexError):
             pass
         try:
-            for pos in enumerate(ChessGame.alphabet[ChessGame.alphabet.index(self.pos[0]) + 1:], int(self.pos[-1]) - 1):
+            for pos in enumerate(ChessGame.alphabet[ChessGame.alphabet.index(self.pos[0]) + 1:], int(''.join([i for i in self.pos if i.isdigit()])) - 1):
                 number = pos[0]
-                if number > int(self.pos[-1]) - 1:
-                    number = (int(self.pos[-1]) + int(int(self.pos[-1]) - 2)) - pos[0]
+                if number > int(''.join([i for i in self.pos if i.isdigit()])) - 1:
+                    number = (int(''.join([i for i in self.pos if i.isdigit()])) + int(int(''.join([i for i in self.pos if i.isdigit()])) - 2)) - pos[0]
                 if field[pos[-1]][str(number)] == ' ':
                     possible_moves.append(pos[-1] + str(number))
                 elif field[pos[-1]][str(number)].__str__() in ChessGame.figures['All'] and field[pos[-1]][str(number)].__str__() not in ChessGame.figures[self.color]:
@@ -217,10 +221,10 @@ class Bishop(Figure):
         except (KeyError, IndexError):
             pass
         try:
-            for pos in enumerate(ChessGame.alphabet[:ChessGame.alphabet.index(self.pos[0])][::-1], int(self.pos[-1]) - 1):
+            for pos in enumerate(ChessGame.alphabet[:ChessGame.alphabet.index(self.pos[0])][::-1], int(''.join([i for i in self.pos if i.isdigit()])) - 1):
                 number = pos[0]
-                if number > int(self.pos[-1]) - 1:
-                    number = (int(self.pos[-1]) + int(int(self.pos[-1]) - 2)) - pos[0]
+                if number > int(''.join([i for i in self.pos if i.isdigit()])) - 1:
+                    number = (int(''.join([i for i in self.pos if i.isdigit()])) + int(int(''.join([i for i in self.pos if i.isdigit()])) - 2)) - pos[0]
                 if field[pos[-1]][str(number)] == ' ':
                     possible_moves.append(pos[-1] + str(number))
                 elif field[pos[-1]][str(number)].__str__() in ChessGame.figures['All'] and field[pos[-1]][str(number)].__str__() not in ChessGame.figures[self.color]:
@@ -259,10 +263,10 @@ class King(Figure):
         for first in range(-1, 2):
             for second in range(-1, 2):
                 try:
-                    if field[ChessGame.alphabet[ChessGame.alphabet.index(self.pos[0]) + first]][str(int(self.pos[-1]) + second)] == ' ':
-                        possible_moves.append(ChessGame.alphabet[ChessGame.alphabet.index(self.pos[0]) + first] + str(int(self.pos[-1]) + second))
-                    elif field[ChessGame.alphabet[ChessGame.alphabet.index(self.pos[0]) + first]][str(int(self.pos[-1]) + second)].__str__() in ChessGame.figures['All'] and field[ChessGame.alphabet[ChessGame.alphabet.index(self.pos[0]) + first]][str(int(self.pos[-1]) + second)].__str__() not in ChessGame.figures[self.color]:
-                        possible_moves.append(ChessGame.alphabet[ChessGame.alphabet.index(self.pos[0]) + first] + str(int(self.pos[-1]) + second))
+                    if field[ChessGame.alphabet[ChessGame.alphabet.index(self.pos[0]) + first]][str(int(''.join([i for i in self.pos if i.isdigit()])) + second)] == ' ':
+                        possible_moves.append(ChessGame.alphabet[ChessGame.alphabet.index(self.pos[0]) + first] + str(int(''.join([i for i in self.pos if i.isdigit()])) + second))
+                    elif field[ChessGame.alphabet[ChessGame.alphabet.index(self.pos[0]) + first]][str(int(''.join([i for i in self.pos if i.isdigit()])) + second)].__str__() in ChessGame.figures['All'] and field[ChessGame.alphabet[ChessGame.alphabet.index(self.pos[0]) + first]][str(int(''.join([i for i in self.pos if i.isdigit()])) + second)].__str__() not in ChessGame.figures[self.color]:
+                        possible_moves.append(ChessGame.alphabet[ChessGame.alphabet.index(self.pos[0]) + first] + str(int(''.join([i for i in self.pos if i.isdigit()])) + second))
                 except (KeyError, IndexError):
                     pass
         possible_moves += (ChessGame.check_castling(field, self.color))
@@ -283,8 +287,8 @@ class Infantry(Figure):
         enemy_color = 'Black' if self.color == 'White' else 'White'
         for vector in vectors:
             try:
-                if ChessGame.alphabet.index(self.pos[0]) + vector[0]>=0 and field[ChessGame.alphabet[ChessGame.alphabet.index(self.pos[0]) + vector[0]]][str(int(self.pos[-1]) + vector[1])].__str__() in ''.join([' ', ChessGame.figures[enemy_color]]):
-                    possible_moves.append(ChessGame.alphabet[ChessGame.alphabet.index(self.pos[0]) + vector[0]]+str(int(self.pos[-1]) + vector[1]))
+                if ChessGame.alphabet.index(self.pos[0]) + vector[0]>=0 and field[ChessGame.alphabet[ChessGame.alphabet.index(self.pos[0]) + vector[0]]][str(int(''.join([i for i in self.pos if i.isdigit()])) + vector[1])].__str__() in ''.join([' ', ChessGame.figures[enemy_color]]):
+                    possible_moves.append(ChessGame.alphabet[ChessGame.alphabet.index(self.pos[0]) + vector[0]]+str(int(''.join([i for i in self.pos if i.isdigit()])) + vector[1]))
             except (IndexError, KeyError):
                 pass
         return possible_moves
@@ -325,12 +329,11 @@ class Game:
         self.type_game = type_game
 
     def start_game(self):
-        if self.type_game in '12':
+        if self.type_game in '123':
             ChessGame(self.type_game).play([], 'White')
 
 
 class ChessGame(Game):
-
     base_field = {
         'A': {
             '1': Rook('A1', 'White'),
@@ -413,6 +416,197 @@ class ChessGame(Game):
             '8': Rook('H8', 'Black'),
         },
     }
+    hex_field = {
+        'A': {
+            '1':'-',
+            '2':'-',
+            '3':'-',
+            '4': '-',
+            '5': Rook('A5', 'White'),
+            '6': '█',
+            '7': Pawn('A7','White'),
+            '8': '█',
+            '9': ' ',
+            '10': '█',
+            '11': ' ',
+            '12': '█',
+            '13': Pawn('A13','Black'),
+            '14': '█',
+            '15': Rook('A15','Black'),
+            '16': '-',
+            '17': '-',
+            '18': '-',
+            '19': '-',
+        },
+        'B': {
+            '1': '-',
+            '2': '-',
+            '3': '-',
+            '4': Knight('B4','White'),
+            '5': '█',
+            '6': Pawn('B6','White'),
+            '7': '█',
+            '8': ' ',
+            '9': '█',
+            '10': ' ',
+            '11': '█',
+            '12': ' ',
+            '13': '█',
+            '14': Pawn('B14','Black'),
+            '15': '█',
+            '16': Bishop('B16','Black'),
+            '17': '-',
+            '18': '-',
+            '19': '-',
+        },
+        'C': {
+            '1': '-',
+            '2': '-',
+            '3': Bishop('C3', 'White'),
+            '4': '█',
+            '5': Pawn('C5','White'),
+            '6': '█',
+            '7': ' ',
+            '8': '█',
+            '9': ' ',
+            '10': '█',
+            '11': ' ',
+            '12': '█',
+            '13': ' ',
+            '14': '█',
+            '15': Pawn('C15','Black'),
+            '16': '█',
+            '17': Knight('C17','Black'),
+            '18': '-',
+            '19': '-',
+        },
+        'D': {
+            '1': '-',
+            '2': Queen('D2','White'),
+            '3': '█',
+            '4': Pawn('D4','White'),
+            '5': '█',
+            '6': ' ',
+            '7': '█',
+            '8': ' ',
+            '9': '█',
+            '10': ' ',
+            '11': '█',
+            '12': ' ',
+            '13': '█',
+            '14': ' ',
+            '15': '█',
+            '16': Pawn('D16','Black'),
+            '17': '█',
+            '18': Bishop('D18','Black'),
+            '19': '-',
+        },
+        'E': {
+            '1': King('E1','White'),
+            '2': '█',
+            '3': Pawn('E3', 'White'),
+            '4': '█',
+            '5': ' ',
+            '6': '█',
+            '7': ' ',
+            '8': '█',
+            '9': ' ',
+            '10': '█',
+            '11': ' ',
+            '12': '█',
+            '13': ' ',
+            '14': '█',
+            '15': ' ',
+            '16': '█',
+            '17': Pawn('E17', 'Black'),
+            '18': '█',
+            '19': King('E19','Black'),
+        },
+        'F': {
+            '1': '-',
+            '2': Bishop('F2', 'White'),
+            '3': '█',
+            '4': Pawn('F4', 'White'),
+            '5': '█',
+            '6': ' ',
+            '7': '█',
+            '8': ' ',
+            '9': '█',
+            '10': ' ',
+            '11': '█',
+            '12': ' ',
+            '13': '█',
+            '14': ' ',
+            '15': '█',
+            '16': Pawn('F16', 'Black'),
+            '17': '█',
+            '18': Queen('F18','Black'),
+            '19': '-',
+        },
+        'G': {
+            '1': '-',
+            '2': '-',
+            '3': Knight('G3','White'),
+            '4': '█',
+            '5': Pawn('G5','White'),
+            '6': '█',
+            '7': ' ',
+            '8': '█',
+            '9': ' ',
+            '10': '█',
+            '11': ' ',
+            '12': '█',
+            '13': ' ',
+            '14': '█',
+            '15': Pawn('G15','Black'),
+            '16': '█',
+            '17': Bishop('G17','Black'),
+            '18': '-',
+            '19': '-',
+        },
+        'H': {
+            '1': '-',
+            '2': '-',
+            '3': '-',
+            '4': Bishop('H4','White'),
+            '5': '█',
+            '6': Pawn('H6', 'White'),
+            '7': '█',
+            '8': ' ',
+            '9': '█',
+            '10': ' ',
+            '11': '█',
+            '12': ' ',
+            '13': '█',
+            '14': Pawn('H14','Black'),
+            '15': '█',
+            '16': Knight('H16','Black'),
+            '17': '-',
+            '18': '-',
+            '19': '-',
+        },
+        'I': {
+            '1': '-',
+            '2': '-',
+            '3': '-',
+            '4': '-',
+            '5': Rook('I5', 'White'),
+            '6': '█',
+            '7': Pawn('I7', 'White'),
+            '8': '█',
+            '9': ' ',
+            '10': '█',
+            '11': ' ',
+            '12': '█',
+            '13': Pawn('I13','Black'),
+            '14': '█',
+            '15': Rook('I15','Black'),
+            '16': '-',
+            '17': '-',
+            '18': '-',
+            '19': '-',
+        },
+    }
 
     mod_field = copy.deepcopy(base_field)
     mod_field['G']['2'] = Infantry('G2', 'White')
@@ -431,15 +625,16 @@ class ChessGame(Game):
         'Black': 'rnbqkpies',
         'All': 'RNBQKPIrnbqkpi',
     }
-
     alphabet = ''.join(letter for letter in base_field.keys())
-
     def __init__(self, type_game):
+        self.game_over = False
         super().__init__(type_game)
         if type_game == '1':
             self.field = ChessGame.base_field
         elif type_game == '2':
             self.field = ChessGame.mod_field
+        elif type_game == '3':
+            self.field = ChessGame.hex_field
 
     def print_field(self, green: list or None = None, red: list or None=None) -> None:
         """
@@ -450,12 +645,12 @@ class ChessGame(Game):
         """
         green = [] if green is None else green
         red = [] if red is None else red
-        print('  ', end=' ')
+        print('   ', end=' ')
         for key in self.field.keys():
             print('\033[37m' + key + '\033[0m', end=' ')
         print()
-        for number in range(8, 0, -1):
-            print('\033[37m' + str(number) + '\033[0m', end='')
+        for number in range(len(self.field['A'].keys()), 0, -1):
+            print('\033[37m' + (' ' * (-1*(len(str(number))-2)))+ str(number) + '\033[0m', end='')
             print('\033[37m' + '|' + '\033[0m', end=' ')
             for key in self.field.keys():
                 if key + str(number) in green:
@@ -469,7 +664,7 @@ class ChessGame(Game):
                     print(self.field[key][str(number)], end=' ')
             print('\033[37m' + '|' + '\033[0m', end='')
             print('\033[37m' + str(number) + '\033[0m')
-        print('  ', end=' ')
+        print('   ', end=' ')
         for key in self.field.keys():
             print('\033[37m' + key + '\033[0m', end=' ')
         print()
@@ -563,8 +758,8 @@ class ChessGame(Game):
                 else:
                     self.field['C']['8'] = '*'
             else:
-                if self.field[step[0]][step[-1]] == ' ':
-                    self.field[step[0]][step[-1]] = '*'
+                if self.field[step[0]][''.join([i for i in step if i.isdigit()])] == ' ':
+                    self.field[step[0]][''.join([i for i in step if i.isdigit()])] = '*'
                 else:
                     green.append(step)
         self.print_field(green, None)
@@ -631,17 +826,17 @@ class ChessGame(Game):
             else:
                 if '-' in steps[step]:
                     current, expected = steps[step].split('-')
-                    self.field[expected[-2]][expected[-1]].pos = current if len(current) == 2 else current[1:]
-                    self.field[current[-2]][current[-1]], self.field[expected[-2]][expected[-1]] = self.field[expected[-2]][expected[-1]], self.field[current[-2]][current[-1]]
+                    self.field[expected[0]][''.join([i for i in expected if i.isdigit()])].pos = current if len(current) == 2 else current[1:]
+                    self.field[current[0]][''.join([i for i in current if i.isdigit()])], self.field[expected[0]][''.join([i for i in expected if i.isdigit()])] = self.field[expected[0]][''.join([i for i in expected if i.isdigit()])], self.field[current[0]][''.join([i for i in current if i.isdigit()])]
                 elif ':' in steps[step]:
                     current, expected = steps[step].split(':')
-                    self.field[expected[-2]][expected[-1]].pos = current if len(current) == 2 else current[1:]
+                    self.field[expected[0]][''.join([i for i in expected if i.isdigit()])].pos = current if len(current) == 2 else current[1:]
                     if len(expected) == 2:
-                        self.field[expected[0]][expected[-1]] = Pawn(expected, 'Black' if color == 'White' else 'White')
+                        self.field[expected[0]][''.join([i for i in expected if i.isdigit()])] = Pawn(expected, 'Black' if color == 'White' else 'White')
                     else:
-                        self.field[expected[1]][expected[-1]] = ChessGame.get_figure_by_str(expected[0])(expected if len(expected) == 2 else expected[1:], 'Black' if color == 'White' else 'White')
+                        self.field[expected[1]][''.join([i for i in expected if i.isdigit()])] = ChessGame.get_figure_by_str(expected[0])(expected if len(expected) == 2 else expected[1:], 'Black' if color == 'White' else 'White')
                     if len(current) == 2:
-                        self.field[current[0]][current[-1]] = Pawn(current, 'White' if color == 'White' else 'Black')
+                        self.field[current[0]][''.join([i for i in current if i.isdigit()])] = Pawn(current, 'White' if color == 'White' else 'Black')
                     else:
                         self.field[current[1]][current[-1]] = ChessGame.get_figure_by_str(current[0])(current if len(current) == 2 else current[1:], 'White' if color == 'White' else 'Black')
             color = 'Black' if color == 'White' else 'White'
@@ -652,11 +847,10 @@ class ChessGame(Game):
         global moves
         moves = notation
         flag = color
-        game_over = False
-        while not game_over:
+        while not self.game_over:
             self.print_field(green=None, red=self.under_fire(flag))
             if self.check_check(flag) and self.check_mate(flag):
-                game_over = True
+                self.game_over = True
                 previous_color = 'чёрных' if flag == 'White' else 'белых'
                 print(f'Игра окончена! Мат! Победа {previous_color}')
                 continue
@@ -665,7 +859,7 @@ class ChessGame(Game):
             else:
                 print('Ход чёрных')
             operand = input('Введите позицию фигуры, которой будет сделан ход: ').upper()
-            if len(operand) != 2:
+            if str(len(operand)) not in '23':
                 print('\033[31m' + 'Введена несуществующая позиция' + '\033[0m')
                 self.play(moves, flag)
             if operand == '<-':
@@ -673,7 +867,7 @@ class ChessGame(Game):
                 flag = self.return_steps(count, flag)
             else:
                 try:
-                    figure = self.field[operand[0]][operand[1]]
+                    figure = self.field[operand[0]][''.join([i for i in operand if i.isdigit()])]
                     if figure == ' ':
                         print('\033[31m' + 'На выбранной клетке нет фигуры' + '\033[0m')
                         self.play(moves, flag)
@@ -737,7 +931,9 @@ class ChessGame(Game):
 
 
 def main():
-    type_game = input('Введите номер игры, в которую хотите сыграть (1-классические шахматы, 2-модифицированные шахматы, 3 - шашки): ')
+    type_game = input('Введите номер игры, в которую хотите сыграть (1-классические шахматы, 2-модифицированные шахматы, 3 - гексагональные шахматы): ')
+    if (type_game == '3'):
+        ChessGame.alphabet += 'I'
     game = Game(type_game)
     game.start_game()
 
