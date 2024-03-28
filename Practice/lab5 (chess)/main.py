@@ -826,8 +826,33 @@ class ChessGame(Game):
             else:
                 if '-' in steps[step]:
                     current, expected = steps[step].split('-')
-                    self.field[expected[0]][''.join([i for i in expected if i.isdigit()])].pos = current if len(current) == 2 else current[1:]
-                    self.field[current[0]][''.join([i for i in current if i.isdigit()])], self.field[expected[0]][''.join([i for i in expected if i.isdigit()])] = self.field[expected[0]][''.join([i for i in expected if i.isdigit()])], self.field[current[0]][''.join([i for i in current if i.isdigit()])]
+                    if len(expected) == 2:
+                        self.field[expected[0]][''.join([i for i in expected if i.isdigit()])].pos = current if len(current) == 2 else current[1:]
+                        if len(current) == 2:
+                            self.field[current[0]][''.join([i for i in current if i.isdigit()])], \
+                            self.field[expected[0]][''.join([i for i in expected if i.isdigit()])] = \
+                            self.field[expected[0]][''.join([i for i in expected if i.isdigit()])], \
+                            self.field[current[0]][''.join([i for i in current if i.isdigit()])]
+                        else:
+                            self.field[current[1]][''.join([i for i in current if i.isdigit()])], \
+                            self.field[expected[0]][
+                                ''.join([i for i in expected if i.isdigit()])] = self.field[expected[0]][
+                                ''.join([i for i in expected if i.isdigit()])], self.field[current[1]][
+                                ''.join([i for i in current if i.isdigit()])]
+                    else:
+                        self.field[expected[1]][''.join([i for i in expected if i.isdigit()])].pos = current if len(
+                            current) == 2 else current[1:]
+                        if len(current) == 2:
+                            self.field[current[0]][''.join([i for i in current if i.isdigit()])], \
+                            self.field[expected[1]][''.join([i for i in expected if i.isdigit()])] = \
+                            self.field[expected[1]][''.join([i for i in expected if i.isdigit()])], \
+                            self.field[current[0]][''.join([i for i in current if i.isdigit()])]
+                        else:
+                            self.field[current[1]][''.join([i for i in current if i.isdigit()])], \
+                            self.field[expected[1]][
+                                ''.join([i for i in expected if i.isdigit()])] = self.field[expected[1]][
+                                ''.join([i for i in expected if i.isdigit()])], self.field[current[1]][
+                                ''.join([i for i in current if i.isdigit()])]
                 elif ':' in steps[step]:
                     current, expected = steps[step].split(':')
                     self.field[expected[0]][''.join([i for i in expected if i.isdigit()])].pos = current if len(current) == 2 else current[1:]
